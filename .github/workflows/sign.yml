@@ -29,7 +29,8 @@ jobs:
       - name: Run sign scripts
         env:
           # ===== 在这里声明你用到的 Secrets =====
-          BDUSS: ${{ secrets.BDUSS }}
+          BARK_URL_TIEBA_QIANDAO: ${{ secrets.BARK_URL_TIEBA_QIANDAO }}
+          BDUSS_TIEBA_QIANDAO: ${{ secrets.BDUSS_TIEBA_QIANDAO }}
           STOKEN: ${{ secrets.STOKEN }}
           JD_COOKIE: ${{ secrets.JD_COOKIE }}
         run: |
