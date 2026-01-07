@@ -1,0 +1,56 @@
+name: Auto Sign Tasks
+
+on:
+  # 定时任务（UTC 时间）
+  schedule:
+    - cron: '0 0 * * *'   # 北京时间 08:00
+  # 手动触发
+  workflow_dispatch:
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run sign scripts
+        env:
+          # ===== 在这里声明你用到的 Secrets =====
+          BDUSS: ${{ secrets.BDUSS }}
+          STOKEN: ${{ secrets.STOKEN }}
+          JD_COOKIE: ${{ secrets.JD_COOKIE }}
+        run: |
+          echo "===== 开始执行签到脚本 ====="
+
+          # 百度贴吧签到
+          if [ -f scripts/auto-tieba-qiandao.py ]; then
+            echo "运行：贴吧签到"
+            python scripts/auto-tieba-qiandao.py
+          fi
+
+          # 京东签到（示例）
+          if [ -f scripts/jd_sign.py ]; then
+            echo "运行：京东签到"
+            python scripts/jd_sign.py
+          fi
+
+          # B站签到（示例）
+          if [ -f scripts/bili_sign.py ]; then
+            echo "运行：B站签到"
+            python scripts/bili_sign.py
+          fi
+
+          echo "===== 所有脚本执行完成 ====="
