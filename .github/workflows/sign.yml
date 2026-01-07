@@ -31,7 +31,6 @@ jobs:
           # ===== 在这里声明你用到的 Secrets =====
           BARK_URL_TIEBA_QIANDAO: ${{ secrets.BARK_URL_TIEBA_QIANDAO }}
           BDUSS_TIEBA_QIANDAO: ${{ secrets.BDUSS_TIEBA_QIANDAO }}
-          STOKEN: ${{ secrets.STOKEN }}
           JD_COOKIE: ${{ secrets.JD_COOKIE }}
         run: |
           echo "===== 开始执行签到脚本 ====="
