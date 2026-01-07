@@ -8,7 +8,6 @@ from typing import List
 
 # --- Bark 配置 ---
 # 🚨 替换为您自己的 Bark Token，确保 URL 以 Token 结尾并带斜杠 /
-# BARK_URL = "https://api.day.app/PAsTyg6aG7UYSAVAuKWGuE/"
 BARK_URL = os.getenv("BARK_URL_TIEBA_QIANDAO")
 # --- Bark 配置结束 ---
 
@@ -247,7 +246,7 @@ def push_bark(title: str, body: str):
 if __name__ == "__main__":
     # 🚨 请将这里的 "BDUSS" 字符串替换为您自己的有效 BDUSS
     BDUSS = os.getenv("BDUSS_TIEBA_QIANDAO")
-    cli = Tieba("NJTlZ1UC0zdHRtb1M3bldkMkdOV0NtUlBacXlXdWl4VHFkTzE1Yy1tQzlad3RwSVFBQUFBJCQAAAAAAAAAAAEAAAAlopEu1E2ZaZi3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAL3a42i92uNoQV")
+    cli = Tieba(BDUSS)
     
     # 运行签到任务，并接收返回的成功数和失败数
     sign_task = SignForums(cli=cli)
