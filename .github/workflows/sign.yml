@@ -38,19 +38,19 @@ jobs:
           # 百度贴吧签到
           if [ -f scripts/auto-tieba-qiandao.py ]; then
             echo "运行：贴吧签到"
-            python scripts/auto-tieba-qiandao.py
+            python scripts/auto-tieba-qiandao.py || true
           fi
 
           # 京东签到（示例）
           if [ -f scripts/jd_sign.py ]; then
             echo "运行：京东签到"
-            python scripts/jd_sign.py
+            python scripts/jd_sign.py || true
           fi
 
           # B站签到（示例）
           if [ -f scripts/bili_sign.py ]; then
             echo "运行：B站签到"
-            python scripts/bili_sign.py
+            python scripts/bili_sign.py || true
           fi
 
           echo "===== 所有脚本执行完成 ====="
