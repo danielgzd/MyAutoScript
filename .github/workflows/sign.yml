@@ -1,11 +1,12 @@
 name: Auto Sign Tasks
 
 on:
-  # 定时任务（UTC 时间）
   schedule:
     - cron: '0 0 * * *'   # 北京时间 08:00
-  # 手动触发
   workflow_dispatch:
+
+permissions:
+  contents: write   # ⭐ 必须加，不然不能 push best_ip.txt
 
 jobs:
   sign:
@@ -28,29 +29,46 @@ jobs:
 
       - name: Run sign scripts
         env:
-          # ===== 在这里声明你用到的 Secrets =====
           BARK_URL_TIEBA_QIANDAO: ${{ secrets.BARK_URL_TIEBA_QIANDAO }}
           BDUSS_TIEBA_QIANDAO: ${{ secrets.BDUSS_TIEBA_QIANDAO }}
           JD_COOKIE: ${{ secrets.JD_COOKIE }}
         run: |
           echo "===== 开始执行签到脚本 ====="
 
-          # 百度贴吧签到
           if [ -f scripts/auto-tieba-qiandao.py ]; then
-            echo "运行：贴吧签到"
             python scripts/auto-tieba-qiandao.py || true
           fi
 
-          # 京东签到（示例）
           if [ -f scripts/jd_sign.py ]; then
-            echo "运行：京东签到"
             python scripts/jd_sign.py || true
           fi
 
-          # B站签到（示例）
-          if [ -f scripts/bili_sign.py ]; then
-            echo "运行：B站签到"
-            python scripts/bili_sign.py || true
-          fi
+          # if [ -f scripts/bili_sign.py ]; then
+          #   python scripts/bili_sign.py || true
+          # fi
 
-          echo "===== 所有脚本执行完成 ====="
+          echo "===== 所有签到脚本执行完成 ====="
+
+      # =============================
+      # 新增：Cloudflare 优选 IP
+      # =============================
+      - name: Run Cloudflare SpeedTest
+        env:
+          TOP_N: "10"   # 输出前10个IP
+          CFST_ARGS: "-p 0 -o result.csv"
+        run: |
+          echo "===== 开始执行 CloudflareSpeedTest ====="
+          python run_speedtest.py
+          echo "===== SpeedTest 执行完成 ====="
+
+      - name: Commit & Push best_ip.txt
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add best_ip.txt result.csv
+            git commit -m "chore: update best_ip.txt ($(date -u +%F))"
+            git push
+          else
+            echo "No changes."
+          fi
