@@ -35,9 +35,9 @@ jobs:
         run: |
           echo "===== 开始执行签到脚本 ====="
 
-          # if [ -f scripts/auto-tieba-qiandao.py ]; then
-          #   python scripts/auto-tieba-qiandao.py || true
-          # fi
+           if [ -f scripts/auto-tieba-qiandao.py ]; then
+             python scripts/auto-tieba-qiandao.py || true
+           fi
 
           # if [ -f scripts/jd_sign.py ]; then
           #   python scripts/jd_sign.py || true
