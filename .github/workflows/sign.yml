@@ -58,7 +58,9 @@ jobs:
           CFST_ARGS: "-p 0 -o result.csv"
         run: |
           echo "===== 开始执行 CloudflareSpeedTest ====="
-          python run_speedtest.py
+          if [ -f scripts/run_speedtest.py ]; then
+            python3 scripts/run_speedtest.py || true
+          fi
           echo "===== SpeedTest 执行完成 ====="
 
       - name: Commit & Push best_ip.txt
