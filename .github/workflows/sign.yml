@@ -35,9 +35,9 @@ jobs:
         run: |
           echo "===== 开始执行签到脚本 ====="
 
-          # if [ -f scripts/auto-tieba-qiandao.py ]; then
-          #   python scripts/auto-tieba-qiandao.py || true
-          # fi
+           if [ -f scripts/auto-tieba-qiandao.py ]; then
+             python scripts/auto-tieba-qiandao.py || true
+           fi
 
           # if [ -f scripts/jd_sign.py ]; then
           #   python scripts/jd_sign.py || true
@@ -58,9 +58,9 @@ jobs:
           CFST_ARGS: "-p 0 -o result.csv"
         run: |
           echo "===== 开始执行 CloudflareSpeedTest ====="
-          if [ -f scripts/run_speedtest.py ]; then
-            python3 scripts/run_speedtest.py || true
-          fi
+          # if [ -f scripts/run_speedtest.py ]; then
+          #   python3 scripts/run_speedtest.py || true
+          # fi
           echo "===== SpeedTest 执行完成 ====="
 
       - name: Commit & Push best_ip.txt
