@@ -59,7 +59,7 @@ def parse_top_ips(csv_path: Path, top_n: int) -> list[str]:
     ips: list[str] = []
     with open(csv_path, "r", encoding="utf-8", newline="") as f:
         reader = csv.reader(f)
-        header = next(reader, None)  # skip header
+        header = next(reader, None)
         if header is None:
             return []
         for row in reader:
@@ -68,7 +68,8 @@ def parse_top_ips(csv_path: Path, top_n: int) -> list[str]:
             ip = row[0].strip()
             if ip:
                 ips.append(ip)
-            if len(ips) >= top_n:
+            # 只有 top_n > 0 才限制数量
+            if top_n > 0 and len(ips) >= top_n:
                 break
     return ips
 
