@@ -48,33 +48,3 @@ jobs:
           # fi
 
           echo "===== 所有签到脚本执行完成 ====="
-
-      # =============================
-      # 新增：Cloudflare 优选 IP
-      # =============================
-      - name: Run Cloudflare SpeedTest
-        env:
-          TOP_N: "0"   # 输出前100个IP
-          CFST_ARGS: "-n 200 -t 4 -dt 8 -p 0 -o result.csv"
-        run: |
-          echo "===== 开始执行 CloudflareSpeedTest ====="
-          if [ -f scripts/run_speedtest.py ]; then
-            python3 scripts/run_speedtest.py
-          else
-            echo "scripts/run_speedtest.py not found"
-            exit 1
-          fi
-          echo "===== SpeedTest 执行完成 ====="
-
-
-      - name: Commit & Push best_ip.txt
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add best_ip.txt result.csv
-            git commit -m "chore: update best_ip.txt ($(date -u +%F))"
-            git push
-          else
-            echo "No changes."
-          fi
