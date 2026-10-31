@@ -1,0 +1,10 @@
+#!name=途虎养车签到
+#!desc=获取积分页 Authorization 并定时签到；获取入口已修复，签到流程尚未在线验证。
+#!author=FoKit, Sliverkiss, danielgzd
+
+[Script]
+http-request ^https:\/\/api\.tuhu\.cn\/[Uu]ser\/(?:GetInternalCenterInfo|GetMemberSignInInfoAsync|SelectUserIntegralByUserId)(?:[?#]|$) script-path=https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js, requires-body=false, timeout=10, tag=途虎养车获取Token
+cron "17 7 * * *" script-path=https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js, timeout=60, tag=途虎养车签到
+
+[Mitm]
+hostname=api.tuhu.cn
