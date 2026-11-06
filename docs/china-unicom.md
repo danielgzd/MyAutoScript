@@ -1,10 +1,10 @@
 # 联通 Cookie 与 Scriptable
 
-BoxJS 订阅：https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/boxjs/china-unicom.boxjs.json
+BoxJS 订阅：https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/BoxJS/china-unicom.boxjs.json
 
-捕获脚本：https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/ChinaUnicomCapture.js
+捕获脚本：https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/Loon/scripts/ChinaUnicomCapture.js
 
-Loon 插件：https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/plugins/china-unicom.lnplugin
+Loon 插件：https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/Loon/plugins/china-unicom.lnplugin
 
 先安装 BoxJS 和代理工具的 HTTPS 解密证书。Loon 导入上述插件；其他工具按下面配置。打开联通 App 刷新首页，然后在 BoxJS 的“中国联通 Cookie”检查是否捕获成功，勿分享 Cookie。
 
@@ -14,7 +14,7 @@ BoxJS 订阅提供配置页面，捕获仍需代理重写规则。
 
 ```ini
 [rewrite_local]
-^https:\/\/m(?:xx)?\.client\.10010\.com\/mobileserviceimportant\/home\/queryUserInfoSeven(?:\?|$) url script-request-header https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/ChinaUnicomCapture.js
+^https:\/\/m(?:xx)?\.client\.10010\.com\/mobileserviceimportant\/home\/queryUserInfoSeven(?:\?|$) url script-request-header https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/Loon/scripts/ChinaUnicomCapture.js
 
 [mitm]
 hostname = m.client.10010.com, mxx.client.10010.com
@@ -24,7 +24,7 @@ hostname = m.client.10010.com, mxx.client.10010.com
 
 ```ini
 [Script]
-联通Cookie = type=http-request,pattern=^https:\/\/m(?:xx)?\.client\.10010\.com\/mobileserviceimportant\/home\/queryUserInfoSeven(?:\?|$),script-path=https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/ChinaUnicomCapture.js
+联通Cookie = type=http-request,pattern=^https:\/\/m(?:xx)?\.client\.10010\.com\/mobileserviceimportant\/home\/queryUserInfoSeven(?:\?|$),script-path=https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/Loon/scripts/ChinaUnicomCapture.js
 
 [MITM]
 hostname = %APPEND% m.client.10010.com, mxx.client.10010.com
