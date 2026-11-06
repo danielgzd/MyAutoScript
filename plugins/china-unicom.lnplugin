@@ -1,0 +1,9 @@
+#!name=联通 Cookie 获取
+#!desc=刷新联通 App 首页获取 Cookie，供 BoxJS 和 Scriptable 使用。
+#!author=danielgzd
+
+[Script]
+http-request ^https:\/\/m(?:xx)?\.client\.10010\.com\/mobileserviceimportant\/home\/queryUserInfoSeven(?:\?|$) script-path=https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/ChinaUnicomCapture.js, requires-body=false, timeout=10, tag=联通Cookie获取
+
+[Mitm]
+hostname=m.client.10010.com,mxx.client.10010.com
