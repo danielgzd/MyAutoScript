@@ -23,7 +23,10 @@
   for (const c of candidates) {
     try {
       const m = importModule(c);
-      if (m && m.main) { core = m; break; }
+      if (m && m.main) {
+        core = m;
+        break;
+      }
     } catch (e) {
       // 该路径写法在本版本不可用，尝试下一个
     }
