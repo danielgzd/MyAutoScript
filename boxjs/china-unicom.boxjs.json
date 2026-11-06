@@ -1,0 +1,24 @@
+{
+  "id": "danielgzd.unicom",
+  "name": "Daniel 联通组件",
+  "author": "danielgzd",
+  "apps": [
+    {
+      "id": "danielgzd.unicom.cookie",
+      "name": "中国联通 Cookie",
+      "desc": "打开联通 App 刷新首页后自动捕获；供 Scriptable ChinaUnicom 使用。",
+      "keys": [
+        "ChinaUnicomCookie"
+      ],
+      "settings": [
+        {
+          "id": "ChinaUnicomCookie",
+          "name": "联通 Cookie",
+          "val": "",
+          "type": "text",
+          "desc": "由捕获规则更新，勿分享此内容"
+        }
+      ]
+    }
+  ]
+}
