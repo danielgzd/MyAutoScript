@@ -1,0 +1,97 @@
+name: Auto Sign Retry Guard
+
+on:
+  workflow_run:
+    workflows: [Auto Sign Tasks]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  actions: write
+
+concurrency:
+  group: sign-retry-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  retry-or-notify:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Use the runner's Python; this guard must not depend on setup-python.
+      # Do not check out or execute code/artifacts from the triggering run.
+      - name: Retry up to three times, then notify Bark
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BARK_URL: ${{ secrets.BARK_URL_TIEBA_QIANDAO }}
+        shell: python
+        run: |
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+
+          MAX_RETRIES = 3  # Initial execution + at most three reruns.
+          with open(os.environ['GITHUB_EVENT_PATH']) as stream:
+              event = json.load(stream)
+          run = event['workflow_run']
+          repository = os.environ['GITHUB_REPOSITORY']
+          if (run['name'] != 'Auto Sign Tasks'
+                  or run['head_branch'] != 'main'
+                  or run['repository']['full_name'] != repository
+                  or run['event'] not in ('schedule', 'workflow_dispatch')):
+              raise SystemExit('Trigger outside supported sign workflow; skipped')
+          run_id = int(run['id'])
+          attempt = int(run['run_attempt'])
+          api_root = os.environ['GITHUB_API_URL'].rstrip('/')
+          endpoint = f'{api_root}/repos/{repository}/actions/runs/{run_id}'
+
+          def github_request(url, method='GET'):
+              request = urllib.request.Request(url, method=method, headers={
+                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                  'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+              })
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  body = response.read()
+                  return json.loads(body) if body else None
+
+          def notify_bark(reason):
+              base = os.environ.get('BARK_URL', '').strip().rstrip('/')
+              if not base:
+                  raise SystemExit('BARK_URL_TIEBA_QIANDAO is missing; retries stopped, notification unavailable')
+              title = 'GitHub 自动签到失败，已停止重试'
+              body = (f'{repository}\n{reason}\n'
+                      f'当前第 {attempt} 次执行（已重试 {attempt - 1} 次）。\n'
+                      f'{run["html_url"]}\n本次不再重试，下个定时周期正常执行。')
+              url = base + '/' + urllib.parse.quote(title, safe='') + '/' + urllib.parse.quote(body, safe='')
+              try:
+                  request = urllib.request.Request(url, headers={'User-Agent': 'MyAutoScript-Retry-Guard'})
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      result = json.load(response)
+                  if result.get('code') != 200:
+                      raise ValueError('Bark rejected notification')
+              except Exception:
+                  # Never print exceptions containing the secret-bearing Bark URL.
+                  raise SystemExit('Bark notification failed; retries remain stopped') from None
+              print('Bark API accepted notification; retries stopped')
+
+          try:
+              current = github_request(endpoint)
+          except Exception:
+              notify_bark('无法查询 GitHub 执行状态，未继续重试。')
+              raise SystemExit('Unable to check run status') from None
+          if (int(current['run_attempt']) != attempt
+                  or current['status'] != 'completed'
+                  or current['conclusion'] != 'failure'):
+              raise SystemExit('Run has changed or is no longer failed; skipped')
+          if attempt <= MAX_RETRIES:
+              try:
+                  github_request(endpoint + '/rerun-failed-jobs', method='POST')
+              except Exception:
+                  notify_bark('GitHub 拒绝或未确认重跑请求，停止自动操作，请查看运行记录。')
+                  raise SystemExit('Unable to confirm rerun request') from None
+              print(f'Requested retry {attempt}/{MAX_RETRIES} for run {run_id}')
+          else:
+              notify_bark('自动重试 3 次后仍失败，已达到上限。')
