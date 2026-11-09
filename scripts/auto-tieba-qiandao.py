@@ -1,4 +1,7 @@
 import os
+import json
+from pathlib import Path
+from datetime import datetime, timezone
 import logging
 import requests
 import hashlib
@@ -29,6 +32,7 @@ class Tieba:
     def __init__(self, bduss: str) -> None:
         """bduss: 贴吧 cookie"""
         self.bduss = bduss
+        self.already_signed = 0
         self.logger = logging.getLogger(__name__)
 
     @property
@@ -125,6 +129,10 @@ class Tieba:
         error_code = int(resp.json().get("error_code") or 0)
         error_msg = resp.json().get("error_msg", "")
         if error_code != 0:
+            if "已经签过" in error_msg:
+                self.already_signed += 1
+                self.logger.info(f"[{name}] 今日已签到")
+                return True
             self.logger.error(f"[{name}] 签到失败: {error_msg}")
             return False
 
@@ -252,6 +260,17 @@ if __name__ == "__main__":
     sign_task = SignForums(cli=cli)
     n_succeed, n_faild = sign_task.run() # 🚀 SignForums.run 现在返回结果
     
+    result_path = os.getenv("SIGN_RESULT_PATH")
+    if result_path:
+        result = {
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "success": n_succeed - cli.already_signed,
+            "already_signed": cli.already_signed,
+            "failed": n_faild,
+            "total": n_succeed + n_faild,
+        }
+        Path(result_path).write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+
     # 运行其他任务 (可选，根据你的需求)
     # LikeHotForums(cli=cli).run() 
 
