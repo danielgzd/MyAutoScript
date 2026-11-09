@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 0 * * *'   # 北京时间 08:00
   workflow_dispatch:
+    inputs:
+      environment_only:
+        description: '仅验证环境缓存，不执行签到或更新 README'
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # ⭐ 必须加，不然不能 push best_ip.txt
@@ -16,18 +21,54 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
+      - name: Identify preinstalled Python
+        id: runtime
+        env:
+          VENV_DIR: ${{ runner.temp }}/myautoscript-venv
         run: |
+          python3 --version
+          python3 - <<'PYTHON'
+          import hashlib, os, sys
+          identity = '|'.join([sys.version, os.path.realpath(sys.executable),
+                               open('/etc/os-release').read(), os.environ.get('ImageOS', ''),
+                               os.environ.get('ImageVersion', ''), os.environ['VENV_DIR']])
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              print('fingerprint=' + hashlib.sha256(identity.encode()).hexdigest(), file=output)
+          PYTHON
+          echo "$VENV_DIR/bin" >> "$GITHUB_PATH"
+
+      - name: Restore installed Python environment
+        id: venv-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/myautoscript-venv
+          key: sign-venv-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.runtime.outputs.fingerprint }}-${{ hashFiles('requirements.txt') }}-end
+
+      - name: Install dependencies on cache miss
+        if: steps.venv-cache.outputs.cache-hit != 'true'
+        env:
+          VENV_DIR: ${{ runner.temp }}/myautoscript-venv
+        run: |
+          python3 -m venv --clear "$VENV_DIR"
           if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
+            "$VENV_DIR/bin/python" -m pip install --disable-pip-version-check -r requirements.txt
           fi
 
+      - name: Verify Python environment
+        run: |
+          python --version
+          python -m pip check
+          python -c 'import requests; print("requests", requests.__version__)'
+
+      - name: Save installed Python environment
+        if: steps.venv-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/myautoscript-venv
+          key: ${{ steps.venv-cache.outputs.cache-primary-key }}
+
       - name: Run sign scripts
+        if: inputs.environment_only != true
         env:
           BARK_URL_TIEBA_QIANDAO: ${{ secrets.BARK_URL_TIEBA_QIANDAO }}
           BDUSS_TIEBA_QIANDAO: ${{ secrets.BDUSS_TIEBA_QIANDAO }}
@@ -49,6 +90,7 @@ jobs:
 
           echo "===== 所有签到脚本执行完成 ====="
       - name: Update README
+        if: inputs.environment_only != true
         run: |
           # 1. 设置北京时间
           export TZ='Asia/Shanghai'
@@ -67,6 +109,7 @@ jobs:
           perl -i -0777 -pe "s/().*()/\$1\n$INFO\n\$2/s" README.md
 
       - name: Commit and Push
+        if: inputs.environment_only != true
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
