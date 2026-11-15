@@ -1,5 +1,5 @@
 #!name=Daniel 综合签到
-#!desc=瓶子、小米社区、途虎；含凭证捕获、定时任务和手动检查。需信任MitM证书，瓶子签名仍需App刷新。不要与单项任务重复启用。
+#!desc=瓶子、小米社区、途虎、联通Cookie捕获；联通供BoxJS和Scriptable使用。需信任MitM证书，瓶子签名仍需App刷新。不要与单项任务重复启用。
 #!author=danielgzd
 
 [Script]
@@ -14,6 +14,7 @@ generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/ma
 request if ${url} ~= /^https:\/\/api\.tuhu\.cn\/[Uu]ser\/(?:GetInternalCenterInfo|GetMemberSignInInfoAsync|SelectUserIntegralByUserId)(?:[?#]|$)/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js") with requires_body=false, timeout=10, tag="途虎凭证捕获"
 cron "17 7 * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js") with timeout=60, tag="途虎每日签到"
 generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js") with timeout=60, tag="途虎手动签到"
+request if ${url} ~= /^https:\/\/m(?:xx)?\.client\.10010\.com\/(?:mobileserviceimportant\/home\/queryUserInfoSeven|servicequerybusiness\/operationservice\/(?:queryOcsPackageFlowLeftContentRevisedInJune|remainingQueryWebDiskTab))(?:[?]|$)/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/Loon/scripts/ChinaUnicomCapture.js") with requires_body=false, timeout=10, tag="联通Cookie获取"
 
 [Mitm]
-hostname=pingxin-api.samaliong.top,api.vip.miui.com,api.tuhu.cn
+hostname=pingxin-api.samaliong.top,api.vip.miui.com,api.tuhu.cn,m.client.10010.com,mxx.client.10010.com
