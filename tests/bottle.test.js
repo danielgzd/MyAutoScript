@@ -67,5 +67,23 @@ function execute(initial,request,server,argument){
   mutations++;cb('timeout');
  }
  x=await execute(captured,null,timeoutServer);await execute(x.data,null,timeoutServer);assert.equal(mutations,1);
+ // Notification regression: explicit manual checks never get suppressed by old keys.
+ let first=await execute(captured,null,(_o,cb)=>cb(null,{status:200},'<bad-json>'),'mode=manual');
+ let second=await execute(first.data,null,(_o,cb)=>cb(null,{status:200},'<bad-json>'),'mode=manual');
+ assert.equal(first.notifications.length,1);assert.equal(second.notifications.length,1);
+ assert(JSON.parse(second.data.gzd_bottle_last_result).status==='failure');
+ first=await execute(captured,null,(_o,cb)=>cb(null,{status:200},'<bad-json>'),'mode=cron');
+ second=await execute(first.data,null,(_o,cb)=>cb(null,{status:200},'<bad-json>'),'mode=cron');
+ assert.equal(first.notifications.length,1);assert.equal(second.notifications.length,0);
+ first=await execute({},null,null,'mode=manual');assert.equal(first.notifications.length,1);assert(first.notifications[0].join('').includes('尚未获取'));
+ first=await execute({gzd_bottle_headers:JSON.stringify({...JSON.parse(captured.gzd_bottle_headers),time:String(Date.now()-600000)})},null,null,'mode=cron');
+ second=await execute(first.data,null,null,'mode=cron');assert.equal(first.notifications.length,1);assert.equal(second.notifications.length,0);
+ first=await execute({gzd_bottle:JSON.stringify({notifications:false})},null,null,'mode=manual');assert.equal(first.notifications.length,0);
+ first=await execute({gzd_bottle:JSON.stringify({notifications:false})},null,null,'mode=notify-test');assert.equal(first.notifications.length,1);assert.equal(first.calls.length,0);
+ const noCharges={...captured,gzd_bottle:JSON.stringify({publish:false,reply:false,greeting:false})};
+ first=await execute(noCharges,null,server,'mode=manual');assert(first.data.gzd_bottle_completed);assert(first.notifications.length===1);
+ second=await execute(first.data,null,server,'mode=manual');assert.equal(second.calls.length,0);assert.equal(second.notifications.length,1);assert(second.notifications[0].join('').includes('今日任务已完成'));
+ assert(first.data.gzd_bottle_notice_status.includes('已请求系统通知'));
+ console.log('7 notification groups passed: repeated manual failures, cron deduplication, missing login, stale signature, master switch, no-network test, cached success');
  console.log('9 offline groups passed: capture/privacy, host guard, empty credentials, stale/disabled, 65-coin task budget, no repeat charges, lower budget, invalid JSON, timeout reservation');
 })();

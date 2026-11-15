@@ -21,7 +21,8 @@
         "gzd_bottle_reply_template",
         "gzd_bottle_last_result",
         "gzd_bottle_capture_status",
-        "gzd_bottle_api_base"
+        "gzd_bottle_api_base",
+        "gzd_bottle_notice_status"
       ],
       "settings": [
         {
@@ -149,9 +150,44 @@
           "val": "",
           "type": "text",
           "desc": "包含银币、瓶分及未完成原因。"
+        },
+        {
+          "id": "@gzd_bottle.notifications",
+          "name": "通知总开关",
+          "val": true,
+          "type": "boolean",
+          "desc": "控制签到脚本结果通知；通知测试入口可独立测试系统权限。"
+        },
+        {
+          "id": "@gzd_bottle.notify_success",
+          "name": "成功或部分完成通知",
+          "val": true,
+          "type": "boolean",
+          "desc": "瓶子手动检查每次通知，定时任务相同结果当天去重。"
+        },
+        {
+          "id": "@gzd_bottle.notify_failure",
+          "name": "失败通知",
+          "val": true,
+          "type": "boolean",
+          "desc": "瓶子手动检查每次通知；定时任务同类错误当天提醒一次。"
+        },
+        {
+          "id": "@gzd_bottle.notify_waiting",
+          "name": "缺凭证或签名过期提醒",
+          "val": true,
+          "type": "boolean",
+          "desc": "手动检查每次反馈；定时检查相同等待状态当天提醒一次。"
+        },
+        {
+          "id": "gzd_bottle_notice_status",
+          "name": "最近通知提交状态",
+          "val": "",
+          "type": "text",
+          "desc": "显示脚本是否调用了 Loon 通知接口；系统是否展示取决于通知权限、Loon设置和专注模式。"
         }
       ],
-      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-timeout3"
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4"
     }
   ]
 }

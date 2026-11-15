@@ -27,7 +27,37 @@
     const n = Number(option(key, fallback));
     return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
   }
-  const notify = (title, text) => { if (typeof $notification !== 'undefined') $notification.post(NAME, title, text); };
+  const argumentText = typeof $argument === 'string' ? $argument : '';
+  const hasMode = mode => new RegExp('(?:^|&)mode=' + mode + '(?:&|$)').test(argumentText);
+  const isManual = typeof $request === 'undefined' && !hasMode('cron') && !hasMode('capture');
+  function notify(title, text, test) {
+    if (!test && !enabled('notifications', true)) { log('通知总开关已关闭'); return false; }
+    if (typeof $notification === 'undefined' || typeof $notification.post !== 'function') {
+      log('当前运行环境没有通知 API');
+      try { put('gzd_bottle_notice_status', '当前运行环境没有 Loon 通知 API'); } catch (_) {}
+      return false;
+    }
+    try {
+      $notification.post(NAME, title, text);
+      log('已向 Loon 提交通知：' + title + '；是否展示由系统权限控制');
+      try { put('gzd_bottle_notice_status', new Date().toISOString() + ' 已请求系统通知：' + title + '（不代表手机已展示）'); } catch (_) {}
+      return true;
+    } catch (_) {
+      log('Loon 通知 API 调用失败');
+      try { put('gzd_bottle_notice_status', 'Loon 通知 API 调用失败，请检查通知权限'); } catch (_) {}
+      return false;
+    }
+  }
+  function statusNotice(kind, title, text, manualOnly) {
+    log(title + '：' + text);
+    if (manualOnly && !isManual) return;
+    const setting = kind === 'failure' ? 'notify_failure' : kind === 'success' ? 'notify_success' : 'notify_waiting';
+    if (!enabled(setting, true)) return;
+    const key = 'gzd_bottle_notice_v4_' + kind + '_' + hash(title + '\n' + text);
+    const stamp = day();
+    if (!isManual && get(key) === stamp) return;
+    if (notify(title, text)) put(key, stamp);
+  }
   function hash(text) { let v = 2166136261; for (let i = 0; i < text.length; i++) v = Math.imul(v ^ text.charCodeAt(i), 16777619); return (v >>> 0).toString(16); }
   const day = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
   const pathOf = url => { const m = /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?(\/[^?#]*)/i.exec(url || ''); return m ? m[1] : ''; };
@@ -137,22 +167,25 @@
     }
   }
   async function run() {
-    if (!enabled('enabled', true)) return;
+    if (!enabled('enabled', true)) { statusNotice('waiting', '自动任务已关闭', '请在 BoxJS 开启自动任务开关。', true); return; }
     headers = json(get('gzd_bottle_headers'), null);
     const storedBase = get('gzd_bottle_api_base');
     apiBase = /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?$/i.test(storedBase || '') ? storedBase : BASE;
     signatureAge = number('signature_max_age', 90, 15, 120);
     if (!headers || !headers.accesstoken || !headers.mobilekey || !headers.time) {
-      log('尚未捕获凭证：请在 Loon【插件】中安装瓶子插件并启用；仅在【脚本】添加 .js 不会安装捕获规则。');
-      log('HTTPS 请求还需要开启 MitM 并信任证书；BoxJS【捕获状态】应变成“已捕获完整凭证与签名”。');
+      statusNotice('waiting', '尚未获取登录凭证', '请启用瓶子捕获插件，进入 App 任务页；HTTPS 请求需要 MitM。BoxJS 捕获状态应显示完整凭证与签名。');
+      return;
+    }
+    const account = hash(headers.accesstoken);
+    if (get('gzd_bottle_completed') === day() + ':' + account) {
+      const previous = json(get('gzd_bottle_last_result'), {});
+      statusNotice('success', '今日任务已完成', Array.isArray(previous.notes) ? previous.notes.join('\n') : '本机已有今日已完成记录，未重复执行扣币动作。', true);
       return;
     }
     const age = (Date.now() - Number(headers.time)) / 1000;
-    if (!Number.isFinite(age) || age < -15 || age > signatureAge) { log('等待 App 产生新鲜签名，未发送任何请求'); return; }
-    const account = hash(headers.accesstoken);
-    if (get('gzd_bottle_completed') === day() + ':' + account) return;
+    if (!Number.isFinite(age) || age < -15 || age > signatureAge) { statusNotice('waiting', '签名已过期，任务未执行', '请重新进入 App 任务页刷新签名，再运行“瓶子手动检查”。'); return; }
     const lock = json(get('gzd_bottle_lock'), null);
-    if (lock && Date.now() - lock.time < 120e3) return;
+    if (lock && Date.now() - lock.time < 120e3) { statusNotice('waiting', '已有任务执行中', '已阻止重复启动，请稍后查看结果。', true); return; }
     const lockId = Date.now() + ':' + Math.random();
     put('gzd_bottle_lock', { id: lockId, time: Date.now() });
     const notes = [];
@@ -221,29 +254,32 @@
       const after = await member();
       notes.push('银币 ' + before.coinNum + ' → ' + after.coinNum + '；瓶分 ' + before.points + ' → ' + after.points);
       notes.push('今日已预留消耗 ' + ledger.reserved + ' 银币；不确定操作也计入上限');
-      put('gzd_bottle_last_result', { at: new Date().toISOString(), day: day(), notes });
+      const partial = notes.some(t => /需先|缺少/.test(t));
+      put('gzd_bottle_last_result', { status: partial ? 'partial' : 'success', at: new Date().toISOString(), day: day(), notes });
       // Missing templates do not count as full completion; retry only after a new App request.
-      if (!notes.some(t => /需先|缺少/.test(t))) put('gzd_bottle_completed', day() + ':' + account);
-      const notificationKey = day() + ':' + hash(notes.join('\n'));
-      if (get('gzd_bottle_last_notification') !== notificationKey) { notify('任务结果', notes.join('\n')); put('gzd_bottle_last_notification', notificationKey); }
+      if (!partial) put('gzd_bottle_completed', day() + ':' + account);
+      statusNotice('success', partial ? '签到已确认，部分任务未完成' : '签到与任务成功', notes.join('\n'));
     } catch (error) {
       const message = error && error.message ? error.message : '执行失败';
-      log(message);
-      const key = day() + ':' + hash(message);
-      if (get('gzd_bottle_last_error') !== key) { notify('本轮已停止', message); put('gzd_bottle_last_error', key); }
+      put('gzd_bottle_last_result', { status: 'failure', at: new Date().toISOString(), day: day(), message });
+      statusNotice('failure', '执行失败，本轮已停止', message);
     } finally {
       const current = json(get('gzd_bottle_lock'), {});
       if (current.id === lockId) put('gzd_bottle_lock', '');
     }
   }
-  const captureMode = typeof $argument === 'string' && /(?:^|&)mode=capture(?:&|$)/.test($argument);
-  if (captureMode && typeof $request === 'undefined') {
+  const captureMode = hasMode('capture');
+  if (hasMode('notify-test')) {
+    notify('通知测试', '这是 Loon 本机通知测试；未调用签到接口，没有发布消息或扣银币。', true);
+    $done();
+  } else if (captureMode && typeof $request === 'undefined') {
     log('这是请求捕获入口，不执行签到。保持插件启用，在 App 进入任务页即可自动捕获；手动任务请运行“瓶子手动检查”。');
+    notify('捕获入口不执行签到', '它只在 App 真实请求经过时保存凭证。手动任务请选择“瓶子手动检查”。');
     $done();
   } else if (typeof $request !== 'undefined') {
     try { capture($request); } catch (_) { log('凭证保存失败'); }
     $done({});
   } else {
-    run().catch(() => log('执行失败')).finally(() => $done());
+    run().catch(error => statusNotice('failure', '执行失败', error && error.message ? error.message : '初始化或存储异常')).finally(() => $done());
   }
 })();
