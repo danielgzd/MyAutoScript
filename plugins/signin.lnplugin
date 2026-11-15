@@ -1,0 +1,19 @@
+#!name=Daniel 综合签到
+#!desc=瓶子、小米社区、途虎；含凭证捕获、定时任务和手动检查。需信任MitM证书，瓶子签名仍需App刷新。不要与单项任务重复启用。
+#!author=danielgzd
+
+[Script]
+request if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/(?:member|fateMail|pingzi)\/[A-Za-z0-9/_-]+(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证与模板捕获"
+cron "* * * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=cron") with timeout=120, tag="瓶子自动任务"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=manual") with timeout=120, tag="瓶子手动检查"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=notify-test") with timeout=10, tag="瓶子通知测试"
+response if ${url} ~= /^https:\/\/api\.vip\.miui\.com(?::443)?\/mtop\/planet\/wechat\/(?:userinfo|checkin\/mypagedata|member\/addCommunityGrowUpPointByActionV2)(?:\?.*)?$/ && ${response.status} == 200 then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2", "mode=capture") with requires_body=true, timeout=5, tag="小米社区凭证捕获"
+cron "20 8 * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2", "mode=cron") with timeout=120, tag="小米社区每日签到"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2", "mode=manual") with timeout=120, tag="小米社区手动签到"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2", "mode=notify-test") with timeout=10, tag="小米社区通知测试"
+request if ${url} ~= /^https:\/\/api\.tuhu\.cn\/[Uu]ser\/(?:GetInternalCenterInfo|GetMemberSignInInfoAsync|SelectUserIntegralByUserId)(?:[?#]|$)/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js") with requires_body=false, timeout=10, tag="途虎凭证捕获"
+cron "17 7 * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js") with timeout=60, tag="途虎每日签到"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js") with timeout=60, tag="途虎手动签到"
+
+[Mitm]
+hostname=pingxin-api.samaliong.top,api.vip.miui.com,api.tuhu.cn
