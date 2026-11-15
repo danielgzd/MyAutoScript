@@ -1,4 +1,4 @@
-#!name=Daniel 综合签到
+#!name=星枢 · 自动化插件
 #!desc=瓶子、小米社区、途虎、联通Cookie捕获；联通供BoxJS和Scriptable使用。需信任MitM证书，瓶子签名仍需App刷新。不要与单项任务重复启用。
 #!author=danielgzd
 
