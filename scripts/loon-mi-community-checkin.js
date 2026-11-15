@@ -10,6 +10,7 @@
   const PAGE = ROOT + 'checkin/mypagedata';
   const ACTION = ROOT + 'member/addCommunityGrowUpPointByActionV2';
   const CREDENTIALS = 'gzd_mi_community_credentials';
+  const LIVE_CREDENTIALS = 'gzd_mi_community_live_credentials_v2';
   const LEDGER = 'gzd_mi_community_ledger';
   const S = typeof $persistentStore !== 'undefined' ? $persistentStore : null;
   const read = key => S ? S.read(key) : null;
@@ -78,6 +79,7 @@
     const value = { cookie: h.cookie, ph, account: accountOf(h.cookie), capturedAt: new Date().toISOString(), headers: {} };
     for (const key of ['user-agent', 'referer', 'origin', 'accept']) if (typeof h[key] === 'string') value.headers[key] = h[key];
     write(CREDENTIALS, value);
+    write(LIVE_CREDENTIALS, value);
     write('gzd_mi_community_header_Cookie', value.cookie);
     write('gzd_mi_community_url', BASE + ACTION + '?wx_vip_ph=' + encodeURIComponent(ph));
     write('gzd_mi_community_body', 'action=WECHAT_CHECKIN_TASK');
@@ -89,8 +91,9 @@
     if (!old || fingerprint(old) !== fingerprint(value)) notify('capture', '登录凭证已更新', '小米社区 Cookie 与 wx_vip_ph 已成对更新，仅保存在本机。');
   }
   function credentials() {
-    const value = parse(read(CREDENTIALS), null);
-    if (value && validPair(value.cookie, value.ph)) return value;
+    const choices = [parse(read(LIVE_CREDENTIALS), null), parse(read(CREDENTIALS), null)].filter(v => v && validPair(v.cookie, v.ph));
+    choices.sort((a, b) => (Date.parse(b.capturedAt) || 0) - (Date.parse(a.capturedAt) || 0));
+    if (choices.length) return choices[0];
     const cookie = read('gzd_mi_community_header_Cookie');
     const url = read('gzd_mi_community_url') || '';
     const ph = /^https:\/\/api\.vip\.miui\.com\//.test(url) ? queryPh(url) : '';
@@ -105,12 +108,13 @@
   let current;
   function authError() {
     if (current) write('gzd_mi_community_auth_state', { fingerprint: fingerprint(current), invalid: true });
-    return new Error('登录态已失效，请在小米社区微信小程序重新登录并进入签到页');
+    return new Error('执行请求被服务器判为401/登录失效；本次使用的捕获时间为 ' + (current && current.capturedAt || '旧BoxJS参数迁移') + '。请对照BoxJS最近捕获时间，勿发送Cookie。');
   }
   function request(path, method) {
     if (![PAGE, ACTION].includes(path) || !['GET', 'POST'].includes(method)) return Promise.reject(new Error('不支持的接口'));
     const headers = Object.assign({ accept: 'application/json, text/plain, */*', origin: 'https://servicewechat.com' }, current.headers || {});
-    headers.cookie = current.cookie;
+    // Use the conventional Cookie header spelling for Loon's native HTTP client.
+    headers.Cookie = current.cookie;
     headers['content-type'] = 'application/x-www-form-urlencoded';
     const options = { url: BASE + path + '?wx_vip_ph=' + encodeURIComponent(current.ph), timeout: 12000, headers, 'auto-cookie': false, 'auto-redirect': false };
     if (method === 'POST') options.body = 'action=WECHAT_CHECKIN_TASK';
@@ -149,6 +153,7 @@
     if (!on('enabled', true)) { if (manual) notify('waiting', '签到已关闭', '请在 BoxJS 开启小米社区签到。'); return; }
     current = credentials();
     if (!current) { notify('waiting', '尚未获取完整登录凭证', '请启用小米社区捕获插件，打开微信小程序签到页；Cookie 与 wx_vip_ph 需要配对，不能只复制 Cookie。'); return; }
+    log('脚本版本 mi2；使用捕获时间：' + (current.capturedAt || '旧BoxJS参数迁移') + '；Cookie字段数：' + Object.keys(cookies(current.cookie)).length);
     const account = current.account || accountOf(current.cookie);
     const key = day() + ':' + account;
     const lock = parse(read('gzd_mi_community_lock'), {});

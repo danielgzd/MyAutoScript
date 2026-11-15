@@ -7,7 +7,7 @@
       "id": "gzd_mi_community",
       "name": "小米社区微信小程序签到",
       "desc": "自动配对捕获Cookie和wx_vip_ph；只签到，不执行浏览、点赞、评论等其他任务。",
-      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi1",
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2",
       "keys": [
         "gzd_mi_community",
         "gzd_mi_community_ledger",
