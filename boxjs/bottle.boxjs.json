@@ -19,9 +19,18 @@
         "gzd_bottle_header_accessToken",
         "gzd_bottle_publish_template",
         "gzd_bottle_reply_template",
-        "gzd_bottle_last_result"
+        "gzd_bottle_last_result",
+        "gzd_bottle_capture_status",
+        "gzd_bottle_api_base"
       ],
       "settings": [
+        {
+          "id": "gzd_bottle_capture_status",
+          "name": "捕获状态（排错首先看这里）",
+          "val": "",
+          "type": "text",
+          "desc": "空值表示捕获规则尚未命中；已打开App仍为空时，请确认插件安装位置、启用状态和HTTPS解密。"
+        },
         {
           "id": "@gzd_bottle.enabled",
           "name": "启用自动任务",
@@ -141,7 +150,8 @@
           "type": "text",
           "desc": "包含银币、瓶分及未完成原因。"
         }
-      ]
+      ],
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js"
     }
   ]
 }

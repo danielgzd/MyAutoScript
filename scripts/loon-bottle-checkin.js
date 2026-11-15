@@ -9,6 +9,7 @@
   'use strict';
   const HOST = 'pingxin-api.samaliong.top';
   const BASE = 'http://' + HOST;
+  let apiBase = BASE;
   const NAME = '瓶子任务';
   const S = typeof $persistentStore !== 'undefined' ? $persistentStore : null;
   const log = text => console.log('[瓶子] ' + text);
@@ -29,7 +30,7 @@
   const notify = (title, text) => { if (typeof $notification !== 'undefined') $notification.post(NAME, title, text); };
   function hash(text) { let v = 2166136261; for (let i = 0; i < text.length; i++) v = Math.imul(v ^ text.charCodeAt(i), 16777619); return (v >>> 0).toString(16); }
   const day = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
-  const pathOf = url => { const m = /^https?:\/\/pingxin-api\.samaliong\.top(?::80)?(\/[^?#]*)/i.exec(url || ''); return m ? m[1] : ''; };
+  const pathOf = url => { const m = /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?(\/[^?#]*)/i.exec(url || ''); return m ? m[1] : ''; };
   function cleanHeaders(headers) {
     const allowed = ['accept', 'user-agent', 'app', 'accesstoken', 'platform', 'mobilekey', 'time', 'appversion', 'udid', 'mobileinfo', 'mobiletype', 'accept-language', 'content-type'];
     const result = {};
@@ -40,7 +41,14 @@
     const path = pathOf(request.url);
     if (!/^\/(member|fateMail|pingzi)\//.test(path)) return;
     const h = cleanHeaders(request.headers);
-    if (!h.accesstoken || !h.mobilekey || !/^\d{13}$/.test(h.time || '')) return;
+    put('gzd_bottle_capture_status', '已命中捕获规则：' + path);
+    if (!h.accesstoken || !h.mobilekey || !/^\d{13}$/.test(h.time || '')) {
+      put('gzd_bottle_capture_status', '已命中，但缺少完整 accessToken / mobileKey / time');
+      log('已命中 App 请求，但缺少完整凭证/签名头；未保存残缺数据');
+      return;
+    }
+    const origin = /^(https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?)(?:\/|$)/i.exec(request.url);
+    if (origin) put('gzd_bottle_api_base', origin[1]);
     const previous = json(get('gzd_bottle_headers'), {});
     put('gzd_bottle_headers', h);
     // Update legacy keys as well; never retain the old hardcoded defaults.
@@ -49,6 +57,7 @@
       put('gzd_bottle_header_' + old, value);
     }
     put('gzd_bottle_capture_at', new Date().toISOString());
+    put('gzd_bottle_capture_status', '已捕获完整凭证与签名（' + (origin && origin[1].startsWith('https:') ? 'HTTPS' : 'HTTP') + '）');
     const body = json(request.body, null);
     if (path === '/pingzi/reng' && body && typeof body.s === 'string' && body.s) {
       // Only App-generated encrypted data. Never bundle payloads from a private capture.
@@ -64,7 +73,7 @@
   function api(path, body, headers) {
     if (!/^\/(member|fateMail|pingzi)\/[A-Za-z0-9/_-]+$/.test(path)) return Promise.reject(new Error('接口路径不受支持'));
     return new Promise((resolve, reject) => {
-      $httpClient.post({ url: BASE + path, timeout: 12, headers, body: JSON.stringify(body || {}) }, (err, response, data) => {
+      $httpClient.post({ url: apiBase + path, timeout: 12, headers, body: JSON.stringify(body || {}) }, (err, response, data) => {
         if (err) return reject(new Error('网络错误或超时，未确认的操作不自动重放'));
         if (!response || Number(response.status || response.statusCode) !== 200) return reject(new Error('HTTP 状态异常'));
         const value = json(data, null);
@@ -127,9 +136,13 @@
   async function run() {
     if (!enabled('enabled', true)) return;
     headers = json(get('gzd_bottle_headers'), null);
+    const storedBase = get('gzd_bottle_api_base');
+    apiBase = /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?$/i.test(storedBase || '') ? storedBase : BASE;
     signatureAge = number('signature_max_age', 90, 15, 120);
     if (!headers || !headers.accesstoken || !headers.mobilekey || !headers.time) {
-      log('等待打开 App 自动获取登录凭证'); return;
+      log('尚未捕获凭证：请在 Loon【插件】中安装瓶子插件并启用；仅在【脚本】添加 .js 不会安装捕获规则。');
+      log('HTTPS 请求还需要开启 MitM 并信任证书；BoxJS【捕获状态】应变成“已捕获完整凭证与签名”。');
+      return;
     }
     const age = (Date.now() - Number(headers.time)) / 1000;
     if (!Number.isFinite(age) || age < -15 || age > signatureAge) { log('等待 App 产生新鲜签名，未发送任何请求'); return; }

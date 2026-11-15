@@ -16,6 +16,9 @@ function execute(initial,request,server){
  assert(!JSON.stringify(x.logs).includes(headers.accessToken));
  assert(!JSON.stringify(x.notifications).includes(headers.accessToken));
  assert.equal(x.calls.length,0);
+ x=await execute({}, {url:'https://pingxin-api.samaliong.top:443/member/memberInfo',headers,body:'{}'});
+ assert.equal(x.data.gzd_bottle_api_base,'https://pingxin-api.samaliong.top:443');
+ assert(x.data.gzd_bottle_capture_status.includes('完整凭证'));
  x=await execute({}, {url:'http://evil.example/member/memberInfo',headers,body:'{}'});assert(!x.data.gzd_bottle_headers);
  x=await execute({}, {url:'http://pingxin-api.samaliong.top/member/memberInfo',headers:{time:headers.time},body:'{}'});assert(!x.data.gzd_bottle_headers);
  x=await execute({gzd_bottle_headers:JSON.stringify({...headers,accesstoken:headers.accessToken.toString(),time:String(Date.now()-600000)})});assert.equal(x.calls.length,0);
