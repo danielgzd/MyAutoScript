@@ -1,0 +1,85 @@
+{
+  "id": "danielgzd.mi-community",
+  "name": "Daniel 小米社区签到",
+  "author": "danielgzd",
+  "apps": [
+    {
+      "id": "gzd_mi_community",
+      "name": "小米社区微信小程序签到",
+      "desc": "自动配对捕获Cookie和wx_vip_ph；只签到，不执行浏览、点赞、评论等其他任务。",
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi1",
+      "keys": [
+        "gzd_mi_community",
+        "gzd_mi_community_ledger",
+        "gzd_mi_community_lock",
+        "gzd_mi_community_auth_state",
+        "gzd_mi_community_url",
+        "gzd_mi_community_body",
+        "gzd_mi_community_capture_status",
+        "gzd_mi_community_capture_at",
+        "gzd_mi_community_header_Cookie",
+        "gzd_mi_community_credentials",
+        "gzd_mi_community_last_result",
+        "gzd_mi_community_notice_status"
+      ],
+      "settings": [
+        {
+          "id": "@gzd_mi_community.enabled",
+          "name": "启用小米社区签到",
+          "val": true,
+          "type": "boolean",
+          "desc": "Loon每日08:20（设备当地时区）执行；不运行其他成长任务。"
+        },
+        {
+          "id": "@gzd_mi_community.notifications",
+          "name": "结果通知",
+          "val": true,
+          "type": "boolean",
+          "desc": "手动检查每次反馈；定时任务相同结果当天去重。通知最终展示由Loon和iOS权限控制。"
+        },
+        {
+          "id": "gzd_mi_community_capture_status",
+          "name": "凭证捕获状态",
+          "val": "",
+          "type": "text",
+          "desc": "成功的业务响应才覆盖凭证；401或不完整Cookie不覆盖。"
+        },
+        {
+          "id": "gzd_mi_community_capture_at",
+          "name": "最近捕获时间",
+          "val": "",
+          "type": "text",
+          "desc": "打开小米社区微信小程序签到页后自动更新。"
+        },
+        {
+          "id": "gzd_mi_community_header_Cookie",
+          "name": "Cookie（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "与请求URL中的wx_vip_ph成对更新。勿分享。"
+        },
+        {
+          "id": "gzd_mi_community_credentials",
+          "name": "配对登录数据（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "由捕获规则维护；不建议手动修改，不要导出分享。"
+        },
+        {
+          "id": "gzd_mi_community_last_result",
+          "name": "最近签到结果",
+          "val": "",
+          "type": "text",
+          "desc": "包含已签到/失败、奖励和成长值，以服务端核验结果为准。"
+        },
+        {
+          "id": "gzd_mi_community_notice_status",
+          "name": "最近通知提交状态",
+          "val": "",
+          "type": "text",
+          "desc": "“已请求”只说明已调用Loon通知接口，不代表手机已展示。"
+        }
+      ]
+    }
+  ]
+}

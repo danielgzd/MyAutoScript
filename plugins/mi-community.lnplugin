@@ -1,0 +1,12 @@
+#!name=小米社区签到与凭证捕获
+#!desc=微信小程序签到；配对捕获 Cookie 与 wx_vip_ph，签到前后核验状态。仅在Loon运行。
+#!author=danielgzd
+
+[Script]
+response if ${url} ~= /^https:\/\/api\.vip\.miui\.com(?::443)?\/mtop\/planet\/wechat\/(?:userinfo|checkin\/mypagedata|member\/addCommunityGrowUpPointByActionV2)(?:\?.*)?$/ && ${response.status} == 200 then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi1", "mode=capture") with requires_body=true, timeout=5, tag="小米社区凭证捕获"
+cron "20 8 * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi1", "mode=cron") with timeout=120, tag="小米社区每日签到"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi1", "mode=manual") with timeout=120, tag="小米社区手动签到"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi1", "mode=notify-test") with timeout=10, tag="小米社区通知测试"
+
+[Mitm]
+hostname=api.vip.miui.com
