@@ -1,16 +1,18 @@
 const fs=require('fs'), vm=require('vm'), assert=require('assert');
 const source=fs.readFileSync(require('path').join(__dirname, '../scripts/loon-bottle-checkin.js'),'utf8');
 const headers={app:'PINGXIN',accessToken:'test-private-token',mobileKey:'test-private-signature',time:String(Date.now()),udid:'test-device'};
-function execute(initial,request,server){
+function execute(initial,request,server,argument){
  const data={...initial},logs=[],notifications=[],calls=[];
  let finish;
  const promise=new Promise(resolve=>finish=resolve);
- const context={console:{log:x=>logs.push(x)},$persistentStore:{read:k=>data[k]??null,write:(v,k)=>(data[k]=v,true)},$notification:{post:(...x)=>notifications.push(x)},$done:()=>finish(),$httpClient:{post:(opts,cb)=>{calls.push(opts);if(server)server(opts,cb);else cb('unexpected network');}}};
+ const context={console:{log:x=>logs.push(x)},$persistentStore:{read:k=>data[k]??null,write:(v,k)=>(data[k]=v,true)},$notification:{post:(...x)=>notifications.push(x)},$done:()=>finish(),$httpClient:{post:(opts,cb)=>{calls.push(opts);assert.equal(opts.timeout,12000,'Loon HTTP timeout must be milliseconds');if(server)server(opts,cb);else cb('unexpected network');}}};
  if(request)context.$request=request;
+ if(argument)context.$argument=argument;
  vm.runInNewContext(source,context);
  return promise.then(()=>({data,logs,notifications,calls}));
 }
 (async()=>{
+ let manual=await execute({},null,null,'mode=capture');assert.equal(manual.calls.length,0);assert(manual.logs.some(x=>x.includes('这是请求捕获入口')));
  let x=await execute({}, {url:'http://pingxin-api.samaliong.top/member/memberInfo',headers,body:'{}'});
  assert.equal(JSON.parse(x.data.gzd_bottle_headers).accesstoken,headers.accessToken);
  assert(!JSON.stringify(x.logs).includes(headers.accessToken));

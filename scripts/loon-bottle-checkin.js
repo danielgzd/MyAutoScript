@@ -73,8 +73,11 @@
   function api(path, body, headers) {
     if (!/^\/(member|fateMail|pingzi)\/[A-Za-z0-9/_-]+$/.test(path)) return Promise.reject(new Error('接口路径不受支持'));
     return new Promise((resolve, reject) => {
-      $httpClient.post({ url: apiBase + path, timeout: 12, headers, body: JSON.stringify(body || {}) }, (err, response, data) => {
-        if (err) return reject(new Error('网络错误或超时，未确认的操作不自动重放'));
+      $httpClient.post({ url: apiBase + path, timeout: 12000, headers, body: JSON.stringify(body || {}) }, (err, response, data) => {
+        if (err) {
+          const code = typeof err === 'object' && err.code !== undefined ? String(err.code).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) : 'NETWORK_ERROR';
+          return reject(new Error('请求 ' + path + ' 失败（' + code + '，超时上限12000毫秒）；未确认操作不重放'));
+        }
         if (!response || Number(response.status || response.statusCode) !== 200) return reject(new Error('HTTP 状态异常'));
         const value = json(data, null);
         if (!value || typeof value !== 'object') return reject(new Error('返回内容不是有效 JSON，不能视为成功'));
@@ -233,7 +236,11 @@
       if (current.id === lockId) put('gzd_bottle_lock', '');
     }
   }
-  if (typeof $request !== 'undefined') {
+  const captureMode = typeof $argument === 'string' && /(?:^|&)mode=capture(?:&|$)/.test($argument);
+  if (captureMode && typeof $request === 'undefined') {
+    log('这是请求捕获入口，不执行签到。保持插件启用，在 App 进入任务页即可自动捕获；手动任务请运行“瓶子手动检查”。');
+    $done();
+  } else if (typeof $request !== 'undefined') {
     try { capture($request); } catch (_) { log('凭证保存失败'); }
     $done({});
   } else {

@@ -151,7 +151,7 @@
           "desc": "包含银币、瓶分及未完成原因。"
         }
       ],
-      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-capture2"
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-timeout3"
     }
   ]
 }
