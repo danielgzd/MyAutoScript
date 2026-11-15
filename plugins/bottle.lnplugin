@@ -1,0 +1,8 @@
+#!name=瓶子任务与凭证捕获
+#!desc=BoxJS 管理；自动获取 accessToken 与原始签名。签名需 App 刷新，非全天离线签到。默认自动消耗上限65银币。
+#!author=danielgzd
+
+[Script]
+request if ${url} ~= /^http:\/\/pingxin-api\.samaliong\.top\/(?:member|fateMail|pingzi)\/[A-Za-z0-9/_-]+(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js") with requires_body=true, timeout=5, tag="瓶子凭证与模板捕获"
+cron "* * * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js") with timeout=120, tag="瓶子自动任务"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js") with timeout=120, tag="瓶子手动检查"

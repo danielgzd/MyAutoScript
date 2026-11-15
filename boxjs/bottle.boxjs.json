@@ -1,0 +1,147 @@
+{
+  "id": "danielgzd.bottle",
+  "name": "Daniel 瓶子 Loon 自动任务",
+  "author": "danielgzd",
+  "apps": [
+    {
+      "id": "danielgzd.bottle.tasks",
+      "name": "瓶子签到与瓶分任务",
+      "desc": "账号和签名自动捕获；银币与瓶分分开统计。发布/回复需使用 App 生成的加密模板，当前缺少回复抓包。",
+      "keys": [
+        "gzd_bottle",
+        "gzd_bottle_headers",
+        "gzd_bottle_ledger",
+        "gzd_bottle_completed",
+        "gzd_bottle_lock",
+        "gzd_bottle_last_error",
+        "gzd_bottle_last_notification",
+        "gzd_bottle_capture_at",
+        "gzd_bottle_header_accessToken",
+        "gzd_bottle_publish_template",
+        "gzd_bottle_reply_template",
+        "gzd_bottle_last_result"
+      ],
+      "settings": [
+        {
+          "id": "@gzd_bottle.enabled",
+          "name": "启用自动任务",
+          "val": true,
+          "type": "boolean",
+          "desc": "打开 App 获取新鲜签名后，每分钟检查一次；过期时不会发送请求。"
+        },
+        {
+          "id": "@gzd_bottle.publish",
+          "name": "自动发布瓶子换瓶分",
+          "val": true,
+          "type": "boolean",
+          "desc": "每次约5银币；必须在 App 配置内容并发布一次以捕获模板，将重复同一加密内容。"
+        },
+        {
+          "id": "@gzd_bottle.greeting",
+          "name": "一键打招呼换瓶分",
+          "val": true,
+          "type": "boolean",
+          "desc": "已获用户授权；每次约50银币，会向其他用户发送 App 的任务问候。"
+        },
+        {
+          "id": "@gzd_bottle.reply",
+          "name": "自动回复（待补充接口）",
+          "val": true,
+          "type": "boolean",
+          "desc": "当前抓包没有回复接口；配置真实路径、成本并捕获模板后才执行。"
+        },
+        {
+          "id": "@gzd_bottle.claim_rewards",
+          "name": "领取已完成任务奖励",
+          "val": true,
+          "type": "boolean",
+          "desc": "只领取状态为可领取的2/3/4任务，不充值或购买。"
+        },
+        {
+          "id": "@gzd_bottle.daily_spend_limit",
+          "name": "每日自动消耗上限（银币）",
+          "val": "65",
+          "type": "text",
+          "desc": "人工在 App 的消耗不计入本上限；未确认的自动操作也预留额度，避免超时后重复扣款。"
+        },
+        {
+          "id": "@gzd_bottle.minimum_balance",
+          "name": "最低保留银币",
+          "val": "100",
+          "type": "text",
+          "desc": "动作执行前检查余额；默认至少保留100。"
+        },
+        {
+          "id": "@gzd_bottle.publish_limit",
+          "name": "每日发布目标上限",
+          "val": "3",
+          "type": "text",
+          "desc": "上限3，依据任务实际剩余进度执行。"
+        },
+        {
+          "id": "@gzd_bottle.reply_limit",
+          "name": "每日回复目标上限",
+          "val": "5",
+          "type": "text",
+          "desc": "上限5；当前接口尚未确认。"
+        },
+        {
+          "id": "@gzd_bottle.signature_max_age",
+          "name": "允许签名最大年龄（秒）",
+          "val": "90",
+          "type": "text",
+          "desc": "支持15到120秒；不更改签名绑定的 time。实际服务端有效期尚未验证。"
+        },
+        {
+          "id": "@gzd_bottle.reply_path",
+          "name": "真实回复接口路径",
+          "val": "",
+          "type": "text",
+          "desc": "抓包中缺失。不能填写打招呼或推荐消息接口冒充回复。"
+        },
+        {
+          "id": "@gzd_bottle.reply_cost",
+          "name": "真实回复单次银币成本",
+          "val": "",
+          "type": "text",
+          "desc": "留空时禁止自动回复；需根据回复前后余额确认。"
+        },
+        {
+          "id": "gzd_bottle_capture_at",
+          "name": "最近捕获时间",
+          "val": "",
+          "type": "text",
+          "desc": "自动更新。"
+        },
+        {
+          "id": "gzd_bottle_header_accessToken",
+          "name": "accessToken（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "仅本机保存，勿分享。必须连同 App 的新签名一并捕获，不要单独覆盖旧值。"
+        },
+        {
+          "id": "gzd_bottle_publish_template",
+          "name": "发布加密模板（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "由 App 发布请求自动保存；不能通过这里改成明文，也不要导出。"
+        },
+        {
+          "id": "gzd_bottle_reply_template",
+          "name": "回复模板（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "配置真实回复路径后自动保存。"
+        },
+        {
+          "id": "gzd_bottle_last_result",
+          "name": "最近任务结果",
+          "val": "",
+          "type": "text",
+          "desc": "包含银币、瓶分及未完成原因。"
+        }
+      ]
+    }
+  ]
+}
