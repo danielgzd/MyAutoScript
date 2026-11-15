@@ -1,0 +1,313 @@
+{
+  "id": "danielgzd.signin",
+  "name": "Daniel 综合签到与凭证",
+  "author": "danielgzd",
+  "apps": [
+    {
+      "id": "gzd_mi_community",
+      "name": "小米社区微信小程序签到",
+      "desc": "自动配对捕获Cookie和wx_vip_ph；只签到，不执行浏览、点赞、评论等其他任务。",
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2",
+      "keys": [
+        "gzd_mi_community",
+        "gzd_mi_community_ledger",
+        "gzd_mi_community_lock",
+        "gzd_mi_community_auth_state",
+        "gzd_mi_community_url",
+        "gzd_mi_community_body",
+        "gzd_mi_community_capture_status",
+        "gzd_mi_community_capture_at",
+        "gzd_mi_community_header_Cookie",
+        "gzd_mi_community_credentials",
+        "gzd_mi_community_last_result",
+        "gzd_mi_community_notice_status"
+      ],
+      "settings": [
+        {
+          "id": "@gzd_mi_community.enabled",
+          "name": "启用小米社区签到",
+          "val": true,
+          "type": "boolean",
+          "desc": "Loon每日08:20（设备当地时区）执行；不运行其他成长任务。"
+        },
+        {
+          "id": "@gzd_mi_community.notifications",
+          "name": "结果通知",
+          "val": true,
+          "type": "boolean",
+          "desc": "手动检查每次反馈；定时任务相同结果当天去重。通知最终展示由Loon和iOS权限控制。"
+        },
+        {
+          "id": "gzd_mi_community_capture_status",
+          "name": "凭证捕获状态",
+          "val": "",
+          "type": "text",
+          "desc": "成功的业务响应才覆盖凭证；401或不完整Cookie不覆盖。"
+        },
+        {
+          "id": "gzd_mi_community_capture_at",
+          "name": "最近捕获时间",
+          "val": "",
+          "type": "text",
+          "desc": "打开小米社区微信小程序签到页后自动更新。"
+        },
+        {
+          "id": "gzd_mi_community_header_Cookie",
+          "name": "Cookie（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "与请求URL中的wx_vip_ph成对更新。勿分享。"
+        },
+        {
+          "id": "gzd_mi_community_credentials",
+          "name": "配对登录数据（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "由捕获规则维护；不建议手动修改，不要导出分享。"
+        },
+        {
+          "id": "gzd_mi_community_last_result",
+          "name": "最近签到结果",
+          "val": "",
+          "type": "text",
+          "desc": "包含已签到/失败、奖励和成长值，以服务端核验结果为准。"
+        },
+        {
+          "id": "gzd_mi_community_notice_status",
+          "name": "最近通知提交状态",
+          "val": "",
+          "type": "text",
+          "desc": "“已请求”只说明已调用Loon通知接口，不代表手机已展示。"
+        }
+      ]
+    },
+    {
+      "id": "danielgzd.bottle.tasks",
+      "name": "瓶子签到与瓶分任务",
+      "desc": "账号和签名自动捕获；银币与瓶分分开统计。发布/回复需使用 App 生成的加密模板，当前缺少回复抓包。",
+      "keys": [
+        "gzd_bottle",
+        "gzd_bottle_headers",
+        "gzd_bottle_ledger",
+        "gzd_bottle_completed",
+        "gzd_bottle_lock",
+        "gzd_bottle_last_error",
+        "gzd_bottle_last_notification",
+        "gzd_bottle_capture_at",
+        "gzd_bottle_header_accessToken",
+        "gzd_bottle_publish_template",
+        "gzd_bottle_reply_template",
+        "gzd_bottle_last_result",
+        "gzd_bottle_capture_status",
+        "gzd_bottle_api_base",
+        "gzd_bottle_notice_status"
+      ],
+      "settings": [
+        {
+          "id": "gzd_bottle_capture_status",
+          "name": "捕获状态（排错首先看这里）",
+          "val": "",
+          "type": "text",
+          "desc": "空值表示捕获规则尚未命中；已打开App仍为空时，请确认插件安装位置、启用状态和HTTPS解密。"
+        },
+        {
+          "id": "@gzd_bottle.enabled",
+          "name": "启用自动任务",
+          "val": true,
+          "type": "boolean",
+          "desc": "打开 App 获取新鲜签名后，每分钟检查一次；过期时不会发送请求。"
+        },
+        {
+          "id": "@gzd_bottle.publish",
+          "name": "自动发布瓶子换瓶分",
+          "val": true,
+          "type": "boolean",
+          "desc": "每次约5银币；必须在 App 配置内容并发布一次以捕获模板，将重复同一加密内容。"
+        },
+        {
+          "id": "@gzd_bottle.greeting",
+          "name": "一键打招呼换瓶分",
+          "val": true,
+          "type": "boolean",
+          "desc": "已获用户授权；每次约50银币，会向其他用户发送 App 的任务问候。"
+        },
+        {
+          "id": "@gzd_bottle.reply",
+          "name": "自动回复（待补充接口）",
+          "val": true,
+          "type": "boolean",
+          "desc": "当前抓包没有回复接口；配置真实路径、成本并捕获模板后才执行。"
+        },
+        {
+          "id": "@gzd_bottle.claim_rewards",
+          "name": "领取已完成任务奖励",
+          "val": true,
+          "type": "boolean",
+          "desc": "只领取状态为可领取的2/3/4任务，不充值或购买。"
+        },
+        {
+          "id": "@gzd_bottle.daily_spend_limit",
+          "name": "每日自动消耗上限（银币）",
+          "val": "65",
+          "type": "text",
+          "desc": "人工在 App 的消耗不计入本上限；未确认的自动操作也预留额度，避免超时后重复扣款。"
+        },
+        {
+          "id": "@gzd_bottle.minimum_balance",
+          "name": "最低保留银币",
+          "val": "100",
+          "type": "text",
+          "desc": "动作执行前检查余额；默认至少保留100。"
+        },
+        {
+          "id": "@gzd_bottle.publish_limit",
+          "name": "每日发布目标上限",
+          "val": "3",
+          "type": "text",
+          "desc": "上限3，依据任务实际剩余进度执行。"
+        },
+        {
+          "id": "@gzd_bottle.reply_limit",
+          "name": "每日回复目标上限",
+          "val": "5",
+          "type": "text",
+          "desc": "上限5；当前接口尚未确认。"
+        },
+        {
+          "id": "@gzd_bottle.signature_max_age",
+          "name": "允许签名最大年龄（秒）",
+          "val": "90",
+          "type": "text",
+          "desc": "支持15到120秒；不更改签名绑定的 time。实际服务端有效期尚未验证。"
+        },
+        {
+          "id": "@gzd_bottle.reply_path",
+          "name": "真实回复接口路径",
+          "val": "",
+          "type": "text",
+          "desc": "抓包中缺失。不能填写打招呼或推荐消息接口冒充回复。"
+        },
+        {
+          "id": "@gzd_bottle.reply_cost",
+          "name": "真实回复单次银币成本",
+          "val": "",
+          "type": "text",
+          "desc": "留空时禁止自动回复；需根据回复前后余额确认。"
+        },
+        {
+          "id": "gzd_bottle_capture_at",
+          "name": "最近捕获时间",
+          "val": "",
+          "type": "text",
+          "desc": "自动更新。"
+        },
+        {
+          "id": "gzd_bottle_header_accessToken",
+          "name": "accessToken（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "仅本机保存，勿分享。必须连同 App 的新签名一并捕获，不要单独覆盖旧值。"
+        },
+        {
+          "id": "gzd_bottle_publish_template",
+          "name": "发布加密模板（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "由 App 发布请求自动保存；不能通过这里改成明文，也不要导出。"
+        },
+        {
+          "id": "gzd_bottle_reply_template",
+          "name": "回复模板（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "配置真实回复路径后自动保存。"
+        },
+        {
+          "id": "gzd_bottle_last_result",
+          "name": "最近任务结果",
+          "val": "",
+          "type": "text",
+          "desc": "包含银币、瓶分及未完成原因。"
+        },
+        {
+          "id": "@gzd_bottle.notifications",
+          "name": "通知总开关",
+          "val": true,
+          "type": "boolean",
+          "desc": "控制签到脚本结果通知；通知测试入口可独立测试系统权限。"
+        },
+        {
+          "id": "@gzd_bottle.notify_success",
+          "name": "成功或部分完成通知",
+          "val": true,
+          "type": "boolean",
+          "desc": "瓶子手动检查每次通知，定时任务相同结果当天去重。"
+        },
+        {
+          "id": "@gzd_bottle.notify_failure",
+          "name": "失败通知",
+          "val": true,
+          "type": "boolean",
+          "desc": "瓶子手动检查每次通知；定时任务同类错误当天提醒一次。"
+        },
+        {
+          "id": "@gzd_bottle.notify_waiting",
+          "name": "缺凭证或签名过期提醒",
+          "val": true,
+          "type": "boolean",
+          "desc": "手动检查每次反馈；定时检查相同等待状态当天提醒一次。"
+        },
+        {
+          "id": "gzd_bottle_notice_status",
+          "name": "最近通知提交状态",
+          "val": "",
+          "type": "text",
+          "desc": "显示脚本是否调用了 Loon 通知接口；系统是否展示取决于通知权限、Loon设置和专注模式。"
+        }
+      ],
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4"
+    },
+    {
+      "id": "gzd_tuhu",
+      "name": "途虎养车",
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/tuhu.js",
+      "keys": [
+        "tuhu_token",
+        "tuhu_blackbox"
+      ],
+      "settings": [
+        {
+          "id": "tuhu_token",
+          "name": "途虎 Token（敏感）",
+          "val": "[]",
+          "type": "text",
+          "desc": "由Loon捕获；不要分享。"
+        },
+        {
+          "id": "tuhu_blackbox",
+          "name": "blackbox（敏感）",
+          "val": "",
+          "type": "text",
+          "desc": "由原脚本维护。"
+        }
+      ]
+    },
+    {
+      "id": "danielgzd.unicom.cookie",
+      "name": "中国联通 Cookie",
+      "desc": "打开联通 App 刷新首页后自动捕获；供 Scriptable ChinaUnicom 使用。",
+      "keys": [
+        "ChinaUnicomCookie"
+      ],
+      "settings": [
+        {
+          "id": "ChinaUnicomCookie",
+          "name": "联通 Cookie",
+          "val": "",
+          "type": "text",
+          "desc": "由捕获规则更新，勿分享此内容"
+        }
+      ]
+    }
+  ]
+}
