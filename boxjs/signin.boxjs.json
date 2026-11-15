@@ -309,5 +309,9 @@
         }
       ]
     }
+  ],
+  "icon": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/assets/xingshu.png",
+  "icons": [
+    "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/assets/xingshu.png"
   ]
 }
