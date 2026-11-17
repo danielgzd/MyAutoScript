@@ -3,10 +3,11 @@
 #!author=danielgzd
 
 [Script]
-request if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/(?:member|fateMail|pingzi)\/[A-Za-z0-9/_-]+(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证与模板捕获"
-cron "* * * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=cron") with timeout=120, tag="瓶子自动任务"
-generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=manual") with timeout=120, tag="瓶子手动检查"
+request if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/(?:member|fateMail|pingzi)\/[A-Za-z0-9/_-]+(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-diag5", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证与模板捕获"
+response if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/fateMail\/taskList(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-diag5", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证响应校验"
+cron "* * * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-diag5", "mode=cron") with timeout=120, tag="瓶子自动任务"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-diag5", "mode=manual") with timeout=120, tag="瓶子手动检查"
 
-generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4", "mode=notify-test") with timeout=10, tag="瓶子通知测试"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-diag5", "mode=notify-test") with timeout=10, tag="瓶子通知测试"
 [Mitm]
 hostname=pingxin-api.samaliong.top

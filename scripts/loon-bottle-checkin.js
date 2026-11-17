@@ -71,6 +71,8 @@
     const path = pathOf(request.url);
     if (!/^\/(member|fateMail|pingzi)\//.test(path)) return;
     const h = cleanHeaders(request.headers);
+    const existing = json(get('gzd_bottle_headers'), {});
+    if (existing.accesstoken === h.accesstoken && Number(existing.time) > Number(h.time)) return;
     put('gzd_bottle_capture_status', '已命中捕获规则：' + path);
     if (!h.accesstoken || !h.mobilekey || !/^\d{13}$/.test(h.time || '')) {
       put('gzd_bottle_capture_status', '已命中，但缺少完整 accessToken / mobileKey / time');
@@ -112,9 +114,11 @@
         const value = json(data, null);
         if (!value || typeof value !== 'object') return reject(new Error('返回内容不是有效 JSON，不能视为成功'));
         if (value.success !== true || Number(value.code) !== 200) {
+          const code = Number(value.code);
           const msg = String(value.message || '业务请求失败');
-          if (/时钟|token|登录|失效|系统异常/i.test(msg)) return reject(new Error('凭证/签名未通过验证，请打开 App 刷新；已停止本轮'));
-          return reject(new Error('业务请求失败（code=' + Number(value.code) + '）'));
+          put('gzd_bottle_api_status', JSON.stringify({ at: new Date().toISOString(), path, code }));
+          if (/时钟|token|登录|失效|签名/i.test(msg)) return reject(new Error(path + ' 验证未通过（code=' + code + '），请在 App 刷新任务页'));
+          return reject(new Error(path + ' 业务请求失败（code=' + code + '）；具体含义未确认'));
         }
         resolve(value.result);
       });
@@ -129,6 +133,8 @@
   let headers, ledger, signatureAge;
   function saveLedger() { put('gzd_bottle_ledger', ledger); }
   async function request(path, body) {
+    const latest = json(get('gzd_bottle_headers'), null);
+    if (latest && latest.accesstoken === headers.accesstoken && Number(latest.time) > Number(headers.time)) headers = latest;
     if (Date.now() - Number(headers.time) > signatureAge * 1000) throw new Error('签名已过期，等待 App 刷新；没有伪造 time');
     return api(path, body, headers);
   }
@@ -177,6 +183,8 @@
       return;
     }
     const account = hash(headers.accesstoken);
+    const attemptKey = hash(headers.accesstoken + ':' + headers.time + ':' + headers.mobilekey);
+    if (!isManual && get('gzd_bottle_failed_signature') === attemptKey) return;
     if (get('gzd_bottle_completed') === day() + ':' + account) {
       const previous = json(get('gzd_bottle_last_result'), {});
       statusNotice('success', '今日任务已完成', Array.isArray(previous.notes) ? previous.notes.join('\n') : '本机已有今日已完成记录，未重复执行扣币动作。', true);
@@ -261,6 +269,7 @@
       statusNotice('success', partial ? '签到已确认，部分任务未完成' : '签到与任务成功', notes.join('\n'));
     } catch (error) {
       const message = error && error.message ? error.message : '执行失败';
+      put('gzd_bottle_failed_signature', attemptKey);
       put('gzd_bottle_last_result', { status: 'failure', at: new Date().toISOString(), day: day(), message });
       statusNotice('failure', '执行失败，本轮已停止', message);
     } finally {
@@ -278,6 +287,10 @@
     $done();
   } else if (typeof $request !== 'undefined') {
     try { capture($request); } catch (_) { log('凭证保存失败'); }
+    if (typeof $response !== 'undefined') {
+      const result = json($response.body, null);
+      if (result && result.success === true && Number(result.code) === 200) put('gzd_bottle_capture_status', 'App 请求已成功，凭证已更新；等待自动任务或运行手动检查');
+    }
     $done({});
   } else {
     run().catch(error => statusNotice('failure', '执行失败', error && error.message ? error.message : '初始化或存储异常')).finally(() => $done());

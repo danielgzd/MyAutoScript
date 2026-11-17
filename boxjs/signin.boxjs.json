@@ -265,7 +265,7 @@
           "desc": "显示脚本是否调用了 Loon 通知接口；系统是否展示取决于通知权限、Loon设置和专注模式。"
         }
       ],
-      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261115-notify4"
+      "script": "https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-diag5"
     },
     {
       "id": "gzd_tuhu",
