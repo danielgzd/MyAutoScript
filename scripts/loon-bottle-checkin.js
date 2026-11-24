@@ -1,8 +1,8 @@
 /**
  * 瓶心 / 瓶子：仅每日签到与必要状态查询。
  * 源码：https://github.com/danielgzd/MyAutoScript
- * 无内置凭证。accessToken、time、mobileKey 必须从 App 的真实请求同步获取。
- * mobileKey 算法尚未取得：保留原 time，不伪造新签名；签名过期时等待 App 刷新。
+ * 无内置凭证。首次从 App 捕获 accessToken，随后无需打开 App 即可定时签到。
+ * 签到接口已实测不需要 time / mobileKey；请求时移除历史签名。
  * 仅在 Loon 运行，不支持 GitHub Actions。任务模板和凭证只保存在设备本地。
  */
 (function () {
@@ -74,9 +74,9 @@
     const existing = json(get('gzd_bottle_headers'), {});
     if (existing.accesstoken === h.accesstoken && Number(existing.time) > Number(h.time)) return;
     put('gzd_bottle_capture_status', '已命中捕获规则：' + path);
-    if (!h.accesstoken || !h.mobilekey || !/^\d{13}$/.test(h.time || '')) {
-      put('gzd_bottle_capture_status', '已命中，但缺少完整 accessToken / mobileKey / time');
-      log('已命中 App 请求，但缺少完整凭证/签名头；未保存残缺数据');
+    if (!h.accesstoken) {
+      put('gzd_bottle_capture_status', '已命中，但缺少 accessToken');
+      log('已命中 App 请求，但缺少登录凭证；未保存残缺数据');
       return;
     }
     const origin = /^(https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?)(?:\/|$)/i.exec(request.url);
@@ -89,14 +89,14 @@
       put('gzd_bottle_header_' + old, value);
     }
     put('gzd_bottle_capture_at', new Date().toISOString());
-    put('gzd_bottle_capture_status', '已捕获完整凭证与签名（' + (origin && origin[1].startsWith('https:') ? 'HTTPS' : 'HTTP') + '）');
-    if (!previous.accesstoken || previous.accesstoken !== h.accesstoken) notify('登录凭证已更新', '凭证仅保存在本机；打开任务页后一分钟内尝试任务。');
+    put('gzd_bottle_capture_status', '已捕获登录凭证（' + (origin && origin[1].startsWith('https:') ? 'HTTPS' : 'HTTP') + '）');
+    if (!previous.accesstoken || previous.accesstoken !== h.accesstoken) notify('登录凭证已更新', '凭证仅保存在本机；已保存，后续由定时任务自动签到。');
     log('已同步 App 凭证和原始签名；未输出凭证');
   }
   function api(path, body, headers) {
     if (!['/fateMail/signInRecord', '/fateMail/signIn'].includes(path)) return Promise.reject(new Error('接口路径不受支持'));
     return new Promise((resolve, reject) => {
-      $httpClient.post({ url: apiBase + path, timeout: 12000, headers, body: JSON.stringify(body || {}) }, (err, response, data) => {
+      $httpClient.post({ url: apiBase + path, timeout: 12000, headers: Object.fromEntries(Object.entries(headers).filter(([key]) => !['time', 'mobilekey'].includes(key.toLowerCase()))), body: JSON.stringify(body || {}) }, (err, response, data) => {
         if (err) {
           const code = typeof err === 'object' && err.code !== undefined ? String(err.code).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) : 'NETWORK_ERROR';
           return reject(new Error('请求 ' + path + ' 失败（' + code + '，超时上限12000毫秒）；未确认操作不重放'));
@@ -115,11 +115,10 @@
       });
     });
   }
-  let headers, signatureAge;
+  let headers;
   async function request(path, body) {
     const latest = json(get('gzd_bottle_headers'), null);
     if (latest && latest.accesstoken === headers.accesstoken && Number(latest.time) > Number(headers.time)) headers = latest;
-    if (Date.now() - Number(headers.time) > signatureAge * 1000) throw new Error('签名已过期，等待 App 刷新；没有伪造 time');
     return api(path, body, headers);
   }
   async function run() {
@@ -127,21 +126,16 @@
     headers = json(get('gzd_bottle_headers'), null);
     const storedBase = get('gzd_bottle_api_base');
     apiBase = /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?$/i.test(storedBase || '') ? storedBase : BASE;
-    signatureAge = number('signature_max_age', 90, 15, 120);
-    if (!headers || !headers.accesstoken || !headers.mobilekey || !headers.time) {
+    if (!headers || !headers.accesstoken) {
       statusNotice('waiting', '尚未获取登录凭证', '请启用瓶子捕获插件，进入 App 任务页；HTTPS 请求需要 MitM。BoxJS 捕获状态应显示完整凭证与签名。');
       return;
     }
     const account = hash(headers.accesstoken);
-    const attemptKey = hash(headers.accesstoken + ':' + headers.time + ':' + headers.mobilekey);
-    if (!isManual && get('gzd_bottle_failed_signature') === attemptKey) return;
     if (get('gzd_bottle_completed') === day() + ':' + account) {
       const previous = json(get('gzd_bottle_last_result'), {});
-      statusNotice('success', '今日任务已完成', Array.isArray(previous.notes) ? previous.notes.join('\n') : '本机已有今日已完成记录，未重复执行扣币动作。', true);
+      statusNotice('success', '今日签到已完成', Array.isArray(previous.notes) ? previous.notes.join('\n') : '本机已有今日已完成记录，未重复提交签到。', true);
       return;
     }
-    const age = (Date.now() - Number(headers.time)) / 1000;
-    if (!Number.isFinite(age) || age < -15 || age > signatureAge) { statusNotice('waiting', '签名已过期，任务未执行', '请重新进入 App 任务页刷新签名，再运行“瓶子手动检查”。'); return; }
     const lock = json(get('gzd_bottle_lock'), null);
     if (lock && Date.now() - lock.time < 120e3) { statusNotice('waiting', '已有任务执行中', '已阻止重复启动，请稍后查看结果。', true); return; }
     const lockId = Date.now() + ':' + Math.random();
@@ -161,7 +155,6 @@
       statusNotice('success', '签到成功', notes.join('\n'));
     } catch (error) {
       const message = error && error.message ? error.message : '执行失败';
-      put('gzd_bottle_failed_signature', attemptKey);
       put('gzd_bottle_last_result', { status: 'failure', at: new Date().toISOString(), day: day(), message });
       statusNotice('failure', '执行失败，本轮已停止', message);
     } finally {

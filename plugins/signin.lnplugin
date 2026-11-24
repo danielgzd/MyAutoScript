@@ -4,11 +4,11 @@
 #!author=danielgzd
 
 [Script]
-request if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/(?:member|fateMail|pingzi)\/[A-Za-z0-9/_-]+(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-signonly6", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证与模板捕获"
-response if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/fateMail\/taskList(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-signonly6", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证响应校验"
-cron "* * * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-signonly6", "mode=cron") with timeout=120, tag="瓶子自动任务"
-generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-signonly6", "mode=manual") with timeout=120, tag="瓶子手动检查"
-generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261117-signonly6", "mode=notify-test") with timeout=10, tag="瓶子通知测试"
+request if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/(?:member|fateMail|pingzi)\/[A-Za-z0-9/_-]+(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261125-auto7", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证与模板捕获"
+response if ${url} ~= /^https?:\/\/pingxin-api\.samaliong\.top(?::(?:80|443))?\/fateMail\/taskList(?:\?.*)?$/ then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261125-auto7", "mode=capture") with requires_body=true, timeout=5, tag="瓶子凭证响应校验"
+cron "5 8,9,12 * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261125-auto7", "mode=cron") with timeout=120, tag="瓶子自动任务"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261125-auto7", "mode=manual") with timeout=120, tag="瓶子手动检查"
+generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-bottle-checkin.js?v=20261125-auto7", "mode=notify-test") with timeout=10, tag="瓶子通知测试"
 response if ${url} ~= /^https:\/\/api\.vip\.miui\.com(?::443)?\/mtop\/planet\/wechat\/(?:userinfo|checkin\/mypagedata|member\/addCommunityGrowUpPointByActionV2)(?:\?.*)?$/ && ${response.status} == 200 then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2", "mode=capture") with requires_body=true, timeout=5, tag="小米社区凭证捕获"
 cron "20 8 * * *" then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2", "mode=cron") with timeout=120, tag="小米社区每日签到"
 generic then script("https://raw.githubusercontent.com/danielgzd/MyAutoScript/main/scripts/loon-mi-community-checkin.js?v=20261115-mi2", "mode=manual") with timeout=120, tag="小米社区手动签到"
